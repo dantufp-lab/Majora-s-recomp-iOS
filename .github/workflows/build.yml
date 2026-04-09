@@ -20,9 +20,10 @@ jobs:
           xcode-version: 'latest-stable'
 
       - name: Instalar Dependencias del Sistema
-        run: brew install cmake ninja
+        run: |
+          brew install cmake ninja freetype pkg-config
 
-      - name: Descargar SDL2 para iOS
+      - name: Descargar y Preparar SDL2 para iOS
         run: |
           git clone https://github.com/libsdl-org/SDL.git -b SDL2
           cd SDL
@@ -31,22 +32,31 @@ jobs:
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
-            -DCMAKE_INSTALL_PREFIX=../../sdl2_ios
+            -DCMAKE_INSTALL_PREFIX=../../sdl2_ios \
+            -DSDL_STATIC=ON \
+            -DSDL_SHARED=OFF
           ninja install
 
       - name: Configurar Proyecto para iOS
         run: |
           mkdir build
           cd build
+          # Obtenemos la ruta de freetype instalada por brew
+          FREETYPE_PATH=$(brew --prefix freetype)
+          
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DSDL2_DIR=$GITHUB_WORKSPACE/sdl2_ios/lib/cmake/SDL2 \
+            -DFREETYPE_INCLUDE_DIRS=$FREETYPE_PATH/include/freetype2 \
+            -DFREETYPE_LIBRARY=$FREETYPE_PATH/lib/libfreetype.a \
             -DRECOMP_PLATFORM=iOS \
             -DUSE_OPENGL=OFF \
             -DUSE_VULKAN=OFF \
-            -DUSE_METAL=ON
+            -DUSE_METAL=ON \
+            -DRMLUI_FREETYPE=ON \
+            -DNFD_PORTABLE=OFF # Desactivamos el diálogo de archivos de PC
             
       - name: Compilar
         run: |
