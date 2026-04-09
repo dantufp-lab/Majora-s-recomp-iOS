@@ -19,8 +19,20 @@ jobs:
         with:
           xcode-version: 'latest-stable'
 
-      - name: Instalar dependencias
+      - name: Instalar Dependencias del Sistema
         run: brew install cmake ninja
+
+      - name: Descargar SDL2 para iOS
+        run: |
+          git clone https://github.com/libsdl-org/SDL.git -b SDL2
+          cd SDL
+          mkdir build-ios
+          cd build-ios
+          cmake .. -G Ninja \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_INSTALL_PREFIX=../../sdl2_ios
+          ninja install
 
       - name: Configurar Proyecto para iOS
         run: |
@@ -30,10 +42,13 @@ jobs:
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DRECOMP_PLATFORM=iOS
+            -DSDL2_DIR=$GITHUB_WORKSPACE/sdl2_ios/lib/cmake/SDL2 \
+            -DRECOMP_PLATFORM=iOS \
+            -DUSE_OPENGL=OFF \
+            -DUSE_VULKAN=OFF \
+            -DUSE_METAL=ON
             
       - name: Compilar
         run: |
           cd build
           ninja
-          
