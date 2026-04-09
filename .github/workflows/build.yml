@@ -41,9 +41,12 @@ jobs:
         run: |
           mkdir build
           cd build
-          # Obtenemos la ruta de freetype instalada por brew
           FREETYPE_PATH=$(brew --prefix freetype)
           
+          mkdir -p ../rsp
+          touch ../rsp/aspMain.cpp
+          echo "void dummy() {}" > ../recompiled_funcs.cpp
+
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
@@ -55,8 +58,9 @@ jobs:
             -DUSE_OPENGL=OFF \
             -DUSE_VULKAN=OFF \
             -DUSE_METAL=ON \
-            -DRMLUI_FREETYPE=ON \
-            -DNFD_PORTABLE=OFF # Desactivamos el diálogo de archivos de PC
+            -DNFD_PORTABLE=OFF \
+            -DNFD_GTK=OFF \
+            -DNFD_MACOS=OFF
             
       - name: Compilar
         run: |
