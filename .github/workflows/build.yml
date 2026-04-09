@@ -43,10 +43,12 @@ jobs:
           cd build
           FREETYPE_PATH=$(brew --prefix freetype)
           
-          # Creamos los archivos faltantes para que el motor no de error
+          # Creamos una estructura de archivos que engañe al CMakeLists original
           mkdir -p ../rsp
           touch ../rsp/aspMain.cpp
           touch ../rsp/njpgdspMain.cpp
+          
+          # Creamos el archivo de funciones y forzamos su detección
           echo "void dummy_recomp() {}" > ../recompiled_funcs.cpp
 
           cmake .. -G Ninja \
@@ -64,7 +66,8 @@ jobs:
             -DNFD_GTK=OFF \
             -DNFD_MACOS=OFF \
             -DAPPKIT_LIBRARY=/usr/lib/libSystem.B.dylib \
-            -DENABLE_NFD=OFF # Desactivamos totalmente el sistema de diálogos de PC
+            -DENABLE_NFD=OFF \
+            -DRECOMPILED_SOURCES="../recompiled_funcs.cpp"
             
       - name: Compilar
         run: |
