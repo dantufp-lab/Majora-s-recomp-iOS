@@ -39,17 +39,19 @@ jobs:
 
       - name: Configurar Proyecto para iOS
         run: |
+          # 1. Crear archivos dummy necesarios
+          mkdir -p rsp
+          touch rsp/aspMain.cpp
+          touch rsp/njpgdspMain.cpp
+          echo "void dummy_recomp() {}" > recompiled_funcs.cpp
+
+          # 2. PARCHE DE FUERZA BRUTA: Modificamos el CMakeLists.txt original
+          # Buscamos la línea que crea RecompiledFuncs y le inyectamos nuestro archivo
+          sed -i '' 's/add_library(RecompiledFuncs OBJECT)/add_library(RecompiledFuncs OBJECT recompiled_funcs.cpp)/g' CMakeLists.txt
+          
           mkdir build
           cd build
           FREETYPE_PATH=$(brew --prefix freetype)
-          
-          # Creamos una estructura de archivos que engañe al CMakeLists original
-          mkdir -p ../rsp
-          touch ../rsp/aspMain.cpp
-          touch ../rsp/njpgdspMain.cpp
-          
-          # Creamos el archivo de funciones y forzamos su detección
-          echo "void dummy_recomp() {}" > ../recompiled_funcs.cpp
 
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
@@ -66,8 +68,7 @@ jobs:
             -DNFD_GTK=OFF \
             -DNFD_MACOS=OFF \
             -DAPPKIT_LIBRARY=/usr/lib/libSystem.B.dylib \
-            -DENABLE_NFD=OFF \
-            -DRECOMPILED_SOURCES="../recompiled_funcs.cpp"
+            -DENABLE_NFD=OFF
             
       - name: Compilar
         run: |
