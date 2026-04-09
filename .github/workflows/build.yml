@@ -65,7 +65,7 @@ jobs:
             -DNFD_GTK=OFF \
             -DNFD_MACOS=OFF \
             -DENABLE_NFD=OFF \
-            -DAPPKIT_LIBRARY="-framework Foundation"
+            -DAPPKIT_LIBRARY=""
             
       - name: Compilar
         run: |
