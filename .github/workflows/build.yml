@@ -3,7 +3,7 @@ Dantu1000 <dantufp@gmail.com>
 5:55 PM (0 minutes ago)
 to me
 
-name: Build Majora iOS
+name: Majoras
 on: [push, workflow_dispatch]
 
 jobs:
