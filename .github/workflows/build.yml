@@ -39,13 +39,12 @@ jobs:
 
       - name: Configurar Proyecto para iOS
         run: |
-          # 1. Creamos los archivos físicos en la raíz del proyecto
           mkdir -p rsp
           touch rsp/aspMain.cpp
           touch rsp/njpgdspMain.cpp
           echo "void dummy_recomp() {}" > recompiled_funcs.cpp
 
-          sed -i '' 's/add_library(RecompiledFuncs OBJECT)/add_library(RecompiledFuncs OBJECT recompiled_funcs.cpp)/g' CMakeLists.txt
+          echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
           mkdir build
           cd build
