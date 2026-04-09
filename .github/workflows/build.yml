@@ -10,8 +10,9 @@ jobs:
       - name: Checkout del codigo
         uses: actions/checkout@v4
         with:
-          repository: ZeldaRET/Zelda64Recomp
+          repository: Francessco121/Zelda64Recomp
           submodules: recursive
+          fetch-depth: 1
 
       - name: Configurar Xcode
         uses: maxim-lobanov/setup-xcode@v1
