@@ -10,7 +10,7 @@ jobs:
       - name: Checkout del codigo
         uses: actions/checkout@v4
         with:
-          repository: Francesco121/Zelda64Recomp
+          repository: Francessco121/Zelda64Recomp
           submodules: recursive
           fetch-depth: 1
 
