@@ -64,8 +64,8 @@ jobs:
             -DNFD_PORTABLE=OFF \
             -DNFD_GTK=OFF \
             -DNFD_MACOS=OFF \
-            -DAPPKIT_LIBRARY=/usr/lib/libSystem.B.dylib \
-            -DENABLE_NFD=OFF
+            -DENABLE_NFD=OFF \
+            -DAPPKIT_LIBRARY="-framework Foundation"
             
       - name: Compilar
         run: |
