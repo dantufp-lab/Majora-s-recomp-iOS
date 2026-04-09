@@ -1,0 +1,40 @@
+
+Dantu1000 <dantufp@gmail.com>
+5:55 PM (0 minutes ago)
+to me
+
+name: Build Majora iOS
+on: [push, workflow_dispatch]
+
+jobs:
+build-ios:
+runs-on: macos-latest
+steps:
+- name: Checkout del código
+uses: actions/checkout@v4
+with:
+repository: ZeldaRET/Zelda64Recomp
+submodules: recursive
+
+- name: Configurar Xcode
+uses: maxim-lobanov/setup-xcode@v1
+with:
+xcode-version: 'latest-stable'
+
+- name: Instalar dependencias (CMake)
+run: brew install cmake ninja
+
+- name: Configurar Proyecto para iOS
+run: |
+mkdir build
+cd build
+cmake .. -G Ninja \
+-DCMAKE_SYSTEM_NAME=iOS \
+-DCMAKE_OSX_SYSROOT=iphoneos \
+-DCMAKE_OSX_ARCHITECTURES=arm64 \
+-DRECOMP_PLATFORM=iOS
+
+- name: Compilar
+run: |
+cd build
+ninja
