@@ -32,6 +32,7 @@ jobs:
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
             -DCMAKE_INSTALL_PREFIX=../../sdl2_ios \
             -DSDL_STATIC=ON \
             -DSDL_SHARED=OFF
@@ -39,6 +40,8 @@ jobs:
 
       - name: Configurar Proyecto para iOS
         run: |
+          # 1. Limpieza y archivos dummy
+          rm -rf build
           mkdir -p rsp
           touch rsp/aspMain.cpp
           touch rsp/njpgdspMain.cpp
@@ -49,11 +52,14 @@ jobs:
           cd build
           FREETYPE_PATH=$(brew --prefix freetype)
 
+          # 2. Forzamos iOS 17.0 en todas las variables posibles
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
+            -DCMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET=17.0 \
+            -DCMAKE_CXX_FLAGS="-miphoneos-version-min=17.0" \
             -DSDL2_DIR=$GITHUB_WORKSPACE/sdl2_ios/lib/cmake/SDL2 \
             -DFREETYPE_INCLUDE_DIRS=$FREETYPE_PATH/include/freetype2 \
             -DFREETYPE_LIBRARY=$FREETYPE_PATH/lib/libfreetype.a \
