@@ -10,7 +10,7 @@ jobs:
       - name: Checkout del codigo
         uses: actions/checkout@v4
         with:
-          repository: Francessco121/Zelda64Recomp
+          repository: Francesco121/Zelda64Recomp
           submodules: recursive
           fetch-depth: 1
 
@@ -43,7 +43,6 @@ jobs:
           touch rsp/aspMain.cpp
           touch rsp/njpgdspMain.cpp
           echo "void dummy_recomp() {}" > recompiled_funcs.cpp
-
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
           mkdir build
@@ -54,6 +53,7 @@ jobs:
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=15.0 \
             -DSDL2_DIR=$GITHUB_WORKSPACE/sdl2_ios/lib/cmake/SDL2 \
             -DFREETYPE_INCLUDE_DIRS=$FREETYPE_PATH/include/freetype2 \
             -DFREETYPE_LIBRARY=$FREETYPE_PATH/lib/libfreetype.a \
