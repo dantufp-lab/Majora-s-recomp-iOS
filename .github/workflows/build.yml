@@ -10,7 +10,7 @@ jobs:
       - name: Checkout del codigo
         uses: actions/checkout@v4
         with:
-          repository: Francessco121/Zelda64Recomp
+          repository: Francesco121/Zelda64Recomp
           submodules: recursive
           fetch-depth: 1
 
@@ -39,14 +39,12 @@ jobs:
 
       - name: Configurar Proyecto para iOS
         run: |
-          # 1. Crear archivos dummy necesarios
+          # 1. Creamos los archivos físicos en la raíz del proyecto
           mkdir -p rsp
           touch rsp/aspMain.cpp
           touch rsp/njpgdspMain.cpp
           echo "void dummy_recomp() {}" > recompiled_funcs.cpp
 
-          # 2. PARCHE DE FUERZA BRUTA: Modificamos el CMakeLists.txt original
-          # Buscamos la línea que crea RecompiledFuncs y le inyectamos nuestro archivo
           sed -i '' 's/add_library(RecompiledFuncs OBJECT)/add_library(RecompiledFuncs OBJECT recompiled_funcs.cpp)/g' CMakeLists.txt
           
           mkdir build
