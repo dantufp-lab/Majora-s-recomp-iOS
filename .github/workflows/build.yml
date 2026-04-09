@@ -43,9 +43,11 @@ jobs:
           cd build
           FREETYPE_PATH=$(brew --prefix freetype)
           
+          # Creamos los archivos faltantes para que el motor no de error
           mkdir -p ../rsp
           touch ../rsp/aspMain.cpp
-          echo "void dummy() {}" > ../recompiled_funcs.cpp
+          touch ../rsp/njpgdspMain.cpp
+          echo "void dummy_recomp() {}" > ../recompiled_funcs.cpp
 
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
@@ -60,7 +62,9 @@ jobs:
             -DUSE_METAL=ON \
             -DNFD_PORTABLE=OFF \
             -DNFD_GTK=OFF \
-            -DNFD_MACOS=OFF
+            -DNFD_MACOS=OFF \
+            -DAPPKIT_LIBRARY=/usr/lib/libSystem.B.dylib \
+            -DENABLE_NFD=OFF # Desactivamos totalmente el sistema de diálogos de PC
             
       - name: Compilar
         run: |
