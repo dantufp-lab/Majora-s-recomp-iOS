@@ -40,17 +40,19 @@ jobs:
 
       - name: Configurar Proyecto para iOS
         run: |
-          # 1. Limpieza y archivos dummy
+          # 1. Archivos dummy
           mkdir -p rsp
           touch rsp/aspMain.cpp
           touch rsp/njpgdspMain.cpp
           echo "void dummy_recomp() {}" > recompiled_funcs.cpp
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
-          # 2. PARCHE CRÍTICO: Borramos el "10.15" que está hardcodeado en RT64
-          # Esto busca cualquier mención de versiones viejas en los CMakeLists y las quita
+          # 2. PARCHE DE MODERNIZACIÓN: Cambiamos versiones viejas por iOS 17
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
           
+          
+          echo "" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
+
           mkdir build
           cd build
           FREETYPE_PATH=$(brew --prefix freetype)
@@ -61,6 +63,7 @@ jobs:
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
             -DCMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET=17.0 \
+            -DCMAKE_CXX_FLAGS="-miphoneos-version-min=17.0" \
             -DSDL2_DIR=$GITHUB_WORKSPACE/sdl2_ios/lib/cmake/SDL2 \
             -DFREETYPE_INCLUDE_DIRS=$FREETYPE_PATH/include/freetype2 \
             -DFREETYPE_LIBRARY=$FREETYPE_PATH/lib/libfreetype.a \
