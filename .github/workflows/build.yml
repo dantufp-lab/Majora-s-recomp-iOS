@@ -47,10 +47,10 @@ jobs:
           echo "void dummy_recomp() {}" > recompiled_funcs.cpp
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
-          # 2. BORRADO FÍSICO DE LOS PATCHES (Para evitar el error de MIPS)
-          # Esto vacía la carpeta para que Ninja no encuentre nada que compilar ahí
-          rm -rf patches/*
-          echo "add_custom_target(PatchesBin)" > patches/CMakeLists.txt
+          # 2. ELIMINACIÓN TOTAL DE LOS PATCHES
+          # Esto borra la carpeta y quita la referencia del CMake principal para que no de error de Makefile
+          rm -rf patches
+          sed -i '' '/add_subdirectory(patches)/d' CMakeLists.txt
 
           # 3. PARCHES DE COMPATIBILIDAD
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
