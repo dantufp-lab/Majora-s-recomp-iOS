@@ -35,7 +35,8 @@ jobs:
             -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
             -DCMAKE_INSTALL_PREFIX=../../sdl2_ios \
             -DSDL_STATIC=ON \
-            -DSDL_SHARED=OFF
+            -DSDL_SHARED=OFF \
+            -DSDL_WERROR=OFF
           ninja install
 
       - name: Configurar Proyecto para iOS
@@ -47,11 +48,13 @@ jobs:
           echo "void dummy_recomp() {}" > recompiled_funcs.cpp
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
-          # 2. PARCHE DE MODERNIZACIÓN: Cambiamos versiones viejas por iOS 17
+          # 2. PARCHES DE CONFIGURACIÓN
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
-          
-          
           echo "" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
+          
+          # 3. DESACTIVAR PARCHES DE MIPS (El error actual)
+          # Esto evita que intente compilar cosas de MIPS que fallan en Mac
+          sed -i '' '/add_subdirectory(patches)/d' CMakeLists.txt
 
           mkdir build
           cd build
