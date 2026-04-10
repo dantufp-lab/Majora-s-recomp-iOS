@@ -40,18 +40,22 @@ jobs:
 
       - name: Configurar Proyecto para iOS
         run: |
-          # 1. Crear archivos dummy para el motor
+          # 1. Archivos dummy para el motor
           mkdir -p rsp
           touch rsp/aspMain.cpp
           touch rsp/njpgdspMain.cpp
           echo "void dummy_recomp() {}" > recompiled_funcs.cpp
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
-          # 2. ELIMINACIÓN TOTAL DE LOS PATCHES
-          # Esto borra la carpeta y quita la referencia del CMake principal para que no de error de Makefile
+          # 2. ENGAÑO TOTAL A LOS PATCHES (Solución al error del Makefile)
           rm -rf patches
-          sed -i '' '/add_subdirectory(patches)/d' CMakeLists.txt
-
+          mkdir -p patches
+          # Creamos un Makefile que no hace nada
+          echo "all:" > patches/Makefile
+          echo "clean:" >> patches/Makefile
+          # Creamos un CMakeLists que define el objetivo pero sin comandos
+          echo "add_custom_target(PatchesBin ALL)" > patches/CMakeLists.txt
+          
           # 3. PARCHES DE COMPATIBILIDAD
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
           echo "" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
