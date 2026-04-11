@@ -48,13 +48,20 @@ jobs:
           touch RecompiledPatches/patches.c RecompiledPatches/funcs.h
           touch RecompiledPatches/patches_bin.c RecompiledPatches/patches_bin.h
           touch RecompiledFuncs/recomp_overlays.inl
+          touch RecompiledPatches/recomp_overlays.inl
           
-          # Calmar al compilador anulando las variables faltantes en register_overlays
+          # Calmar al compilador anulando las variables faltantes en register_overlays y register_patches
           sed -i '' 's/= section_table/= nullptr/g' src/main/register_overlays.cpp
           sed -i '' 's/ARRLEN(section_table)/0/g' src/main/register_overlays.cpp
           sed -i '' 's/= num_sections/= 0/g' src/main/register_overlays.cpp
           sed -i '' 's/= overlay_sections_by_index/= nullptr/g' src/main/register_overlays.cpp
           sed -i '' 's/ARRLEN(overlay_sections_by_index)/0/g' src/main/register_overlays.cpp
+          
+          sed -i '' 's/= section_table/= nullptr/g' src/main/register_patches.cpp
+          sed -i '' 's/ARRLEN(section_table)/0/g' src/main/register_patches.cpp
+          sed -i '' 's/= num_sections/= 0/g' src/main/register_patches.cpp
+          sed -i '' 's/= overlay_sections_by_index/= nullptr/g' src/main/register_patches.cpp
+          sed -i '' 's/ARRLEN(overlay_sections_by_index)/0/g' src/main/register_patches.cpp
           
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
@@ -139,5 +146,3 @@ jobs:
           cd build
           # Limitamos a 4 procesos en paralelo para que el servidor no vuelva a asfixiarse
           ninja -j4
-
-
