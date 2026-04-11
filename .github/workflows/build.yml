@@ -50,27 +50,32 @@ jobs:
           
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
-          # 2. Neutralizar Patches antiguos
+          # 2. Neutralizar N64Recomp (Sin romper file_to_c)
           echo "all:" > patches/Makefile
           echo "clean:" > patches/Makefile
           touch patches/patches.bin
           
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND \.\/N64Recomp/# COMMAND/g' {} +
-          find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND \.\/file_to_c/# COMMAND/g' {} +
-          find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND file_to_c/# COMMAND/g' {} +
 
-          # 3. Modernización a iOS 17
+          # 3. TRUCO DE CROSS-COMPILING: Crear versión nativa de file_to_c
+          # Buscamos el código y lo compilamos para el Mac (el servidor)
+          FILE_TO_C_SRC=$(find . -name "file_to_c.cpp" | head -n 1)
+          clang++ $FILE_TO_C_SRC -o $GITHUB_WORKSPACE/file_to_c_mac
+          chmod +x $GITHUB_WORKSPACE/file_to_c_mac
+          
+          # Engañamos a CMake para que use el ejecutable de Mac
+          find . -name "CMakeLists.txt" -exec sed -i '' "s|COMMAND \./file_to_c|COMMAND $GITHUB_WORKSPACE/file_to_c_mac|g" {} +
+          find . -name "CMakeLists.txt" -exec sed -i '' "s|COMMAND file_to_c|COMMAND $GITHUB_WORKSPACE/file_to_c_mac|g" {} +
+          find . -name "CMakeLists.txt" -exec sed -i '' "s|\\\$<TARGET_FILE:file_to_c>|$GITHUB_WORKSPACE/file_to_c_mac|g" {} +
+
+          # 4. Modernización a iOS 17
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
           echo "" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
 
-          # 4. PARCHES DEFINITIVOS (SHADERS Y SLJIT)
-          # Evitamos compilar shaders incompatibles
+          # 5. PARCHES DEFINITIVOS (SHADERS Y SLJIT)
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND spirv_cross_msl/COMMAND touch/g' {} +
-          
-          # Forzamos a que xcrun use el SDK de iOS, no el de Mac
           find . -name "CMakeLists.txt" -exec sed -i '' 's/-sdk macosx/-sdk iphoneos/g' {} +
 
-          # Inyectamos la config ARM64 y el parche de seguridad directo en el cerebro de SLJIT
           echo "#define SLJIT_CONFIG_ARM_64 1" > temp_sljit.h
           echo "#define SLJIT_UPDATE_WX_FLAGS(p1, p2, p3)" >> temp_sljit.h
           cat lib/N64ModernRuntime/N64Recomp/lib/sljit/sljit_src/sljitConfigInternal.h >> temp_sljit.h
@@ -80,7 +85,7 @@ jobs:
           cd build
           FREETYPE_PATH=$(brew --prefix freetype)
 
-          # 5. CMAKE
+          # 6. CMAKE
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
