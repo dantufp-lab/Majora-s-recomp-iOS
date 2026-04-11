@@ -40,7 +40,7 @@ jobs:
 
       - name: Configurar Proyecto para iOS
         run: |
-          # 1. Archivos dummy (Corrección de rutas aplicada)
+          # 1. Archivos dummy y neutralización de variables
           mkdir -p RecompiledPatches RecompiledFuncs patches rsp
           touch rsp/aspMain.cpp rsp/njpgdspMain.cpp
           echo "void dummy_recomp() {}" > recompiled_funcs.cpp
@@ -48,6 +48,13 @@ jobs:
           touch RecompiledPatches/patches.c RecompiledPatches/funcs.h
           touch RecompiledPatches/patches_bin.c RecompiledPatches/patches_bin.h
           touch RecompiledFuncs/recomp_overlays.inl
+          
+          # Calmar al compilador anulando las variables faltantes en register_overlays
+          sed -i '' 's/= section_table/= nullptr/g' src/main/register_overlays.cpp
+          sed -i '' 's/ARRLEN(section_table)/0/g' src/main/register_overlays.cpp
+          sed -i '' 's/= num_sections/= 0/g' src/main/register_overlays.cpp
+          sed -i '' 's/= overlay_sections_by_index/= nullptr/g' src/main/register_overlays.cpp
+          sed -i '' 's/ARRLEN(overlay_sections_by_index)/0/g' src/main/register_overlays.cpp
           
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
@@ -132,4 +139,5 @@ jobs:
           cd build
           # Limitamos a 4 procesos en paralelo para que el servidor no vuelva a asfixiarse
           ninja -j4
+
 
