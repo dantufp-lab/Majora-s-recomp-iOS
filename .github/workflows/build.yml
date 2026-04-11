@@ -87,6 +87,9 @@ jobs:
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSSize/CGSize/g' {} +
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSPoint/CGPoint/g' {} +
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/contentView/self/g' {} +
+          
+          # Eliminar comandos exclusivos de macOS
+          find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/\[nsWindow toggleFullScreen:NULL\];//g' {} +
 
           echo "#define SLJIT_CONFIG_ARM_64 1" > temp_sljit.h
           echo "#define SLJIT_UPDATE_WX_FLAGS(p1, p2, p3)" >> temp_sljit.h
