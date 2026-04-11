@@ -63,27 +63,31 @@ jobs:
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
           echo "" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
 
-          # 4. PARCHES DE SEGURIDAD Y GRÁFICOS
-          # Antimemoria para los shaders
+          # 4. PARCHES DEFINITIVOS (SHADERS Y SLJIT)
+          # Evitamos compilar shaders incompatibles
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND spirv_cross_msl/COMMAND touch/g' {} +
+          
+          # Forzamos a que xcrun use el SDK de iOS, no el de Mac
+          find . -name "CMakeLists.txt" -exec sed -i '' 's/-sdk macosx/-sdk iphoneos/g' {} +
 
-          # Parche Quirúrgico para el error WX de Apple en SLJIT
-          echo "#define SLJIT_UPDATE_WX_FLAGS(p1, p2, p3)" > sljit_patch.h
-          cat lib/N64ModernRuntime/N64Recomp/lib/sljit/sljit_src/sljitLir.c >> sljit_patch.h
-          mv sljit_patch.h lib/N64ModernRuntime/N64Recomp/lib/sljit/sljit_src/sljitLir.c
+          # Inyectamos la config ARM64 y el parche de seguridad directo en el cerebro de SLJIT
+          echo "#define SLJIT_CONFIG_ARM_64 1" > temp_sljit.h
+          echo "#define SLJIT_UPDATE_WX_FLAGS(p1, p2, p3)" >> temp_sljit.h
+          cat lib/N64ModernRuntime/N64Recomp/lib/sljit/sljit_src/sljitConfigInternal.h >> temp_sljit.h
+          mv temp_sljit.h lib/N64ModernRuntime/N64Recomp/lib/sljit/sljit_src/sljitConfigInternal.h
 
           mkdir build
           cd build
           FREETYPE_PATH=$(brew --prefix freetype)
 
-          # 5. CMAKE CON FLAGS DE 64 BITS
+          # 5. CMAKE
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
             -DCMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET=17.0 \
-            -DCMAKE_CXX_FLAGS="-miphoneos-version-min=17.0 -DSLJIT_CONFIG_ARM_64=1" \
+            -DCMAKE_CXX_FLAGS="-miphoneos-version-min=17.0" \
             -DSDL2_DIR=$GITHUB_WORKSPACE/sdl2_ios/lib/cmake/SDL2 \
             -DFREETYPE_INCLUDE_DIRS=$FREETYPE_PATH/include/freetype2 \
             -DFREETYPE_LIBRARY=$FREETYPE_PATH/lib/libfreetype.a \
@@ -100,5 +104,5 @@ jobs:
       - name: Compilar
         run: |
           cd build
-          ninja
-
+          # Limitamos a 4 procesos en paralelo para que el servidor no vuelva a asfixiarse
+          ninja -j4
