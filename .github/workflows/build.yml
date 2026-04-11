@@ -91,6 +91,9 @@ jobs:
           
           # Eliminar comandos exclusivos de macOS
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' '/toggleFullScreen/d' {} +
+          
+          # SDL2: Cambiar el subsistema de ventanas de Cocoa (Mac) a UIKit (iOS)
+          find src -name "*.cpp" -exec sed -i '' 's/info.cocoa.window/info.uikit.window/g' {} +
 
           echo "#define SLJIT_CONFIG_ARM_64 1" > temp_sljit.h
           echo "#define SLJIT_UPDATE_WX_FLAGS(p1, p2, p3)" >> temp_sljit.h
