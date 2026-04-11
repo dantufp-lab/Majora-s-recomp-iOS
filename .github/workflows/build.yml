@@ -104,14 +104,15 @@ jobs:
           cd build
           FREETYPE_PATH=$(brew --prefix freetype)
 
-          # 6. CMAKE
+          # 6. CMAKE (AÑADIDAS RUTAS GLOBALES PARA SDL2)
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
             -DCMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET=17.0 \
-            -DCMAKE_CXX_FLAGS="-miphoneos-version-min=17.0" \
+            -DCMAKE_CXX_FLAGS="-miphoneos-version-min=17.0 -I$GITHUB_WORKSPACE/sdl2_ios/include/SDL2 -I$GITHUB_WORKSPACE/sdl2_ios/include" \
+            -DCMAKE_C_FLAGS="-miphoneos-version-min=17.0 -I$GITHUB_WORKSPACE/sdl2_ios/include/SDL2 -I$GITHUB_WORKSPACE/sdl2_ios/include" \
             -DSDL2_DIR=$GITHUB_WORKSPACE/sdl2_ios/lib/cmake/SDL2 \
             -DFREETYPE_INCLUDE_DIRS=$FREETYPE_PATH/include/freetype2 \
             -DFREETYPE_LIBRARY=$FREETYPE_PATH/lib/libfreetype.a \
