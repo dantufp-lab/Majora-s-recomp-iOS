@@ -63,10 +63,21 @@ jobs:
 
       - name: Configurar Proyecto para iOS
         run: |
-          # 1. Archivos dummy y neutralización de variables
+          # 1. Archivos dummy con FIRMAS REALES para calmar al Linker
           mkdir -p RecompiledPatches RecompiledFuncs patches rsp
-          touch rsp/aspMain.cpp rsp/njpgdspMain.cpp
-          echo "void dummy_recomp() {}" > recompiled_funcs.cpp
+          
+          cat << 'EOF' > rsp/aspMain.cpp
+          extern "C" void aspMain(unsigned char*, unsigned int) {}
+          EOF
+          
+          cat << 'EOF' > rsp/njpgdspMain.cpp
+          extern "C" void njpgdspMain(unsigned char*, unsigned int) {}
+          EOF
+          
+          cat << 'EOF' > recompiled_funcs.cpp
+          extern "C" void* get_entrypoint_address() { return 0; }
+          extern "C" void recomp_entrypoint() {}
+          EOF
           
           touch RecompiledPatches/patches.c RecompiledPatches/funcs.h
           touch RecompiledPatches/patches_bin.c RecompiledPatches/patches_bin.h
@@ -94,7 +105,6 @@ jobs:
           # 2. Neutralizar N64Recomp (Sin romper file_to_c)
           echo "all:" > patches/Makefile
           echo "clean:" > patches/Makefile
-          # EL TRUCO: Un archivo binario válido de 1 byte en vez de uno vacío
           echo -n -e '\x00' > patches/patches.bin
           
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND \.\/N64Recomp/# COMMAND/g' {} +
@@ -104,27 +114,36 @@ jobs:
           clang++ -std=c++17 $FILE_TO_C_SRC -o $GITHUB_WORKSPACE/file_to_c_mac
           chmod +x $GITHUB_WORKSPACE/file_to_c_mac
           
-          # Engañamos a CMake para que use el ejecutable de Mac
           find . -name "CMakeLists.txt" -exec sed -i '' "s|COMMAND \./file_to_c|COMMAND $GITHUB_WORKSPACE/file_to_c_mac|g" {} +
           find . -name "CMakeLists.txt" -exec sed -i '' "s|COMMAND file_to_c|COMMAND $GITHUB_WORKSPACE/file_to_c_mac|g" {} +
           find . -name "CMakeLists.txt" -exec sed -i '' "s|\\\$<TARGET_FILE:file_to_c>|$GITHUB_WORKSPACE/file_to_c_mac|g" {} +
 
-          # 4. Modernización a iOS 17 y Neutralización de NFD
+          # 4. Modernización a iOS 17 y Cascarones para NFD
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
           
-          # Creamos una librería "falsa" para engañar al linker
-          echo "void dummy_nfd() {}" > lib/rt64/src/contrib/nativefiledialog-extended/src/empty_nfd.cpp
+          cat << 'EOF' > lib/rt64/src/contrib/nativefiledialog-extended/src/empty_nfd.cpp
+          extern "C" {
+              int NFD_Init(void) { return 1; }
+              void NFD_Quit(void) {}
+              void NFD_FreePathN(void* path) {}
+              int NFD_OpenDialogN(void* a, const void* b, int c, const void* d) { return 0; }
+              int NFD_OpenDialogMultipleN(void* a, const void* b, int c, const void* d) { return 0; }
+              int NFD_SaveDialogN(void* a, const void* b, int c, const void* d, const void* e) { return 0; }
+              int NFD_PickFolderN(void* a, const void* b) { return 0; }
+              int NFD_PathSet_GetCount(const void* a, unsigned int* b) { return 0; }
+              int NFD_PathSet_GetPathN(const void* a, unsigned int b, void* c) { return 0; }
+              void NFD_PathSet_Free(const void* a) {}
+          }
+          EOF
           echo "add_library(nfd STATIC empty_nfd.cpp)" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
 
           # 5. PARCHES DEFINITIVOS (SHADERS, SLJIT Y TRADUCCIÓN MACOS -> IOS)
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND spirv_cross_msl/COMMAND touch/g' {} +
           find . -name "CMakeLists.txt" -exec sed -i '' 's/-sdk macosx/-sdk iphoneos/g' {} +
 
-          # Reemplazar librerías de Mac por iOS
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/AppKit\/AppKit.h/UIKit\/UIKit.h/g' {} +
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/Cocoa\/Cocoa.h/UIKit\/UIKit.h/g' {} +
           
-          # Traducción de tipos (Rosetta Stone para el código)
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSWindow/UIWindow/g' {} +
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSView/UIView/g' {} +
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSRect/CGRect/g' {} +
@@ -133,10 +152,8 @@ jobs:
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSScreen/UIScreen/g' {} +
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/contentView/self/g' {} +
           
-          # Eliminar comandos exclusivos de macOS
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' '/toggleFullScreen/d' {} +
           
-          # SDL2: Cambiar el subsistema de ventanas de Cocoa (Mac) a UIKit (iOS)
           find src -name "*.cpp" -exec sed -i '' 's/info.cocoa.window/info.uikit.window/g' {} +
 
           echo "#define SLJIT_CONFIG_ARM_64 1" > temp_sljit.h
@@ -147,10 +164,9 @@ jobs:
           mkdir build
           cd build
           
-          # Ruta a nuestra nueva compilación de FreeType para iOS
           FREETYPE_PATH=$GITHUB_WORKSPACE/freetype_ios
 
-          # 6. CMAKE (AÑADIDAS RUTAS GLOBALES PARA SDL2 Y FREETYPE IOS)
+          # 6. CMAKE 
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
