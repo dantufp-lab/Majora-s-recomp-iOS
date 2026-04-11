@@ -21,7 +21,7 @@ jobs:
 
       - name: Instalar Dependencias del Sistema
         run: |
-          brew install cmake ninja freetype pkg-config
+          brew install cmake ninja pkg-config
 
       - name: Descargar y Preparar SDL2 para iOS
         run: |
@@ -36,6 +36,25 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=../../sdl2_ios \
             -DSDL_STATIC=ON \
             -DSDL_SHARED=OFF
+          ninja install
+
+      - name: Descargar y Preparar FreeType para iOS
+        run: |
+          git clone https://gitlab.freedesktop.org/freetype/freetype.git -b VER-2-13-2
+          cd freetype
+          mkdir build-ios
+          cd build-ios
+          # Desactivamos dependencias extra (PNG, ZLIB, etc.) para una compilación limpia estática
+          cmake .. -G Ninja \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
+            -DCMAKE_INSTALL_PREFIX=../../freetype_ios \
+            -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE \
+            -DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE \
+            -DCMAKE_DISABLE_FIND_PACKAGE_PNG=TRUE \
+            -DCMAKE_DISABLE_FIND_PACKAGE_HarfBuzz=TRUE \
+            -DCMAKE_DISABLE_FIND_PACKAGE_BrotliDec=TRUE
           ninja install
 
       - name: Configurar Proyecto para iOS
@@ -123,9 +142,11 @@ jobs:
 
           mkdir build
           cd build
-          FREETYPE_PATH=$(brew --prefix freetype)
+          
+          # Ruta a nuestra nueva compilación de FreeType para iOS
+          FREETYPE_PATH=$GITHUB_WORKSPACE/freetype_ios
 
-          # 6. CMAKE (AÑADIDAS RUTAS GLOBALES PARA SDL2)
+          # 6. CMAKE (AÑADIDAS RUTAS GLOBALES PARA SDL2 Y FREETYPE IOS)
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
