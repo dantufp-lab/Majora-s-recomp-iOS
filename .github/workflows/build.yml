@@ -57,12 +57,15 @@ jobs:
           sed -i '' 's/= overlay_sections_by_index/= nullptr/g' src/main/register_overlays.cpp
           sed -i '' 's/ARRLEN(overlay_sections_by_index)/0/g' src/main/register_overlays.cpp
           
-          # Comentar las llamadas a funciones problemáticas en register_patches en lugar de borrarlas
+          # Comentar las llamadas a funciones problemáticas en register_patches
           sed -i '' 's/recomp::overlays::register_patches/\/\/ recomp::overlays::register_patches/g' src/main/register_patches.cpp
           sed -i '' 's/recomp::overlays::register_base_exports/\/\/ recomp::overlays::register_base_exports/g' src/main/register_patches.cpp
           sed -i '' 's/recomp::overlays::register_base_events/\/\/ recomp::overlays::register_base_events/g' src/main/register_patches.cpp
           sed -i '' 's/recomp::overlays::register_manual_patch_symbols/\/\/ recomp::overlays::register_manual_patch_symbols/g' src/main/register_patches.cpp
           
+          # Bloquear llamada a std::system (Prohibido en iOS)
+          sed -i '' 's/std::system(command.c_str());/\/\/ std::system(command.c_str());/g' src/ui/ui_mod_menu.cpp
+
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
           # 2. Neutralizar N64Recomp (Sin romper file_to_c)
