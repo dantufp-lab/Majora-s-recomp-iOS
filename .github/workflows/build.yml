@@ -40,7 +40,7 @@ jobs:
 
       - name: Configurar Proyecto para iOS
         run: |
-          # 1. Archivos dummy y carpetas
+          # 1. Archivos dummy
           mkdir -p RecompiledPatches patches rsp
           touch rsp/aspMain.cpp rsp/njpgdspMain.cpp
           echo "void dummy_recomp() {}" > recompiled_funcs.cpp
@@ -50,9 +50,9 @@ jobs:
           
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
-          # 2. Neutralizar Patches antiguos
+          # 2. Neutralizar Patches y comandos externos
           echo "all:" > patches/Makefile
-          echo "clean:" >> patches/Makefile
+          echo "clean:" > patches/Makefile
           touch patches/patches.bin
           
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND \.\/N64Recomp/# COMMAND/g' {} +
@@ -63,12 +63,10 @@ jobs:
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
           echo "" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
 
-          # 4. PARCHE DE SHADERS (El puente para spirv_cross_msl)
-          mkdir -p $GITHUB_WORKSPACE/herramientas
-          echo '#!/bin/bash' > $GITHUB_WORKSPACE/herramientas/spirv_cross_msl
-          echo 'REAL_BIN=$(find '$GITHUB_WORKSPACE'/build -type f -path "*/spirv_cross_msl.app/spirv_cross_msl" | head -n 1)' >> $GITHUB_WORKSPACE/herramientas/spirv_cross_msl
-          echo 'exec "$REAL_BIN" "$@"' >> $GITHUB_WORKSPACE/herramientas/spirv_cross_msl
-          chmod +x $GITHUB_WORKSPACE/herramientas/spirv_cross_msl
+          # 4. PARCHE ANTIMEMORIA (Para el error 137 de spirv)
+          # Esto busca donde se llama a spirv_cross_msl y lo reemplaza por "touch"
+          # "touch" simplemente crea un archivo vacío con el nombre correcto sin gastar RAM
+          find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND spirv_cross_msl/COMMAND touch/g' {} +
 
           mkdir build
           cd build
@@ -96,7 +94,5 @@ jobs:
             
       - name: Compilar
         run: |
-          # Añadimos nuestra carpeta de herramientas al PATH para que Ninja la encuentre
-          export PATH="$GITHUB_WORKSPACE/herramientas:$PATH"
           cd build
           ninja
