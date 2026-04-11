@@ -58,9 +58,9 @@ jobs:
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND \.\/N64Recomp/# COMMAND/g' {} +
 
           # 3. TRUCO DE CROSS-COMPILING: Crear versión nativa de file_to_c
-          # Buscamos el código y lo compilamos para el Mac (el servidor)
+          # Buscamos el código y lo compilamos para el Mac (el servidor) indicando que use C++17
           FILE_TO_C_SRC=$(find . -name "file_to_c.cpp" | head -n 1)
-          clang++ $FILE_TO_C_SRC -o $GITHUB_WORKSPACE/file_to_c_mac
+          clang++ -std=c++17 $FILE_TO_C_SRC -o $GITHUB_WORKSPACE/file_to_c_mac
           chmod +x $GITHUB_WORKSPACE/file_to_c_mac
           
           # Engañamos a CMake para que use el ejecutable de Mac
