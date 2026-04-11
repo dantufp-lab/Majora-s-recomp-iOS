@@ -53,7 +53,8 @@ jobs:
           # 2. Neutralizar N64Recomp (Sin romper file_to_c)
           echo "all:" > patches/Makefile
           echo "clean:" > patches/Makefile
-          touch patches/patches.bin
+          # EL TRUCO: Un archivo binario válido de 1 byte en vez de uno vacío
+          echo -n -e '\x00' > patches/patches.bin
           
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND \.\/N64Recomp/# COMMAND/g' {} +
 
