@@ -86,9 +86,12 @@ jobs:
           find . -name "CMakeLists.txt" -exec sed -i '' "s|COMMAND file_to_c|COMMAND $GITHUB_WORKSPACE/file_to_c_mac|g" {} +
           find . -name "CMakeLists.txt" -exec sed -i '' "s|\\\$<TARGET_FILE:file_to_c>|$GITHUB_WORKSPACE/file_to_c_mac|g" {} +
 
-          # 4. Modernización a iOS 17
+          # 4. Modernización a iOS 17 y Neutralización de NFD
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
-          echo "" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
+          
+          # Creamos una librería "falsa" para engañar al linker
+          echo "void dummy_nfd() {}" > lib/rt64/src/contrib/nativefiledialog-extended/src/empty_nfd.cpp
+          echo "add_library(nfd STATIC empty_nfd.cpp)" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
 
           # 5. PARCHES DEFINITIVOS (SHADERS, SLJIT Y TRADUCCIÓN MACOS -> IOS)
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND spirv_cross_msl/COMMAND touch/g' {} +
