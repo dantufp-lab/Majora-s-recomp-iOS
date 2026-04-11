@@ -73,9 +73,13 @@ jobs:
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
           echo "" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
 
-          # 5. PARCHES DEFINITIVOS (SHADERS Y SLJIT)
+          # 5. PARCHES DEFINITIVOS (SHADERS, SLJIT Y APPLE FRAMEWORKS)
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND spirv_cross_msl/COMMAND touch/g' {} +
           find . -name "CMakeLists.txt" -exec sed -i '' 's/-sdk macosx/-sdk iphoneos/g' {} +
+
+          # Reemplazar AppKit por UIKit para compatibilidad con iOS
+          find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/AppKit\/AppKit.h/UIKit\/UIKit.h/g' {} +
+          find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/Cocoa\/Cocoa.h/UIKit\/UIKit.h/g' {} +
 
           echo "#define SLJIT_CONFIG_ARM_64 1" > temp_sljit.h
           echo "#define SLJIT_UPDATE_WX_FLAGS(p1, p2, p3)" >> temp_sljit.h
