@@ -59,7 +59,6 @@ jobs:
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND \.\/N64Recomp/# COMMAND/g' {} +
 
           # 3. TRUCO DE CROSS-COMPILING: Crear versión nativa de file_to_c
-          # Buscamos el código y lo compilamos para el Mac (el servidor) indicando que use C++17
           FILE_TO_C_SRC=$(find . -name "file_to_c.cpp" | head -n 1)
           clang++ -std=c++17 $FILE_TO_C_SRC -o $GITHUB_WORKSPACE/file_to_c_mac
           chmod +x $GITHUB_WORKSPACE/file_to_c_mac
@@ -73,13 +72,21 @@ jobs:
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
           echo "" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
 
-          # 5. PARCHES DEFINITIVOS (SHADERS, SLJIT Y APPLE FRAMEWORKS)
+          # 5. PARCHES DEFINITIVOS (SHADERS, SLJIT Y TRADUCCIÓN MACOS -> IOS)
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND spirv_cross_msl/COMMAND touch/g' {} +
           find . -name "CMakeLists.txt" -exec sed -i '' 's/-sdk macosx/-sdk iphoneos/g' {} +
 
-          # Reemplazar AppKit por UIKit para compatibilidad con iOS
+          # Reemplazar librerías de Mac por iOS
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/AppKit\/AppKit.h/UIKit\/UIKit.h/g' {} +
           find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/Cocoa\/Cocoa.h/UIKit\/UIKit.h/g' {} +
+          
+          # Traducción de tipos (Rosetta Stone para el código)
+          find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSWindow/UIWindow/g' {} +
+          find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSView/UIView/g' {} +
+          find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSRect/CGRect/g' {} +
+          find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSSize/CGSize/g' {} +
+          find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/NSPoint/CGPoint/g' {} +
+          find lib/rt64/src/apple -name "*.mm" -exec sed -i '' 's/contentView/self/g' {} +
 
           echo "#define SLJIT_CONFIG_ARM_64 1" > temp_sljit.h
           echo "#define SLJIT_UPDATE_WX_FLAGS(p1, p2, p3)" >> temp_sljit.h
