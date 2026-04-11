@@ -44,12 +44,13 @@ jobs:
           cd freetype
           mkdir build-ios
           cd build-ios
-          # Desactivamos dependencias extra (PNG, ZLIB, etc.) para una compilación limpia estática
+          # Desactivamos dependencias extra y forzamos compatibilidad de CMake
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
             -DCMAKE_INSTALL_PREFIX=../../freetype_ios \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.0 \
             -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE \
             -DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE \
             -DCMAKE_DISABLE_FIND_PACKAGE_PNG=TRUE \
@@ -171,5 +172,4 @@ jobs:
       - name: Compilar
         run: |
           cd build
-          # Limitamos a 4 procesos en paralelo para que el servidor no vuelva a asfixiarse
           ninja -j4
