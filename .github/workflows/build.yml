@@ -42,15 +42,18 @@ jobs:
         run: |
           git clone https://gitlab.freedesktop.org/freetype/freetype.git -b VER-2-13-2
           cd freetype
+          
+          # Forzamos a que CMakeLists pida una versión moderna y salte el error
+          sed -i '' 's/cmake_minimum_required.*/cmake_minimum_required(VERSION 3.5)/g' CMakeLists.txt
+          
           mkdir build-ios
           cd build-ios
-          # Desactivamos dependencias extra y forzamos compatibilidad de CMake
+          # Desactivamos dependencias extra para una compilación limpia
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
             -DCMAKE_INSTALL_PREFIX=../../freetype_ios \
-            -DCMAKE_POLICY_VERSION_MINIMUM=3.0 \
             -DCMAKE_DISABLE_FIND_PACKAGE_ZLIB=TRUE \
             -DCMAKE_DISABLE_FIND_PACKAGE_BZip2=TRUE \
             -DCMAKE_DISABLE_FIND_PACKAGE_PNG=TRUE \
