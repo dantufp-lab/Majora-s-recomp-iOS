@@ -50,7 +50,7 @@ jobs:
           
           echo "target_sources(RecompiledFuncs PRIVATE \${CMAKE_CURRENT_SOURCE_DIR}/recompiled_funcs.cpp)" >> CMakeLists.txt
           
-          # 2. Neutralizar Patches y comandos externos
+          # 2. Neutralizar Patches antiguos
           echo "all:" > patches/Makefile
           echo "clean:" > patches/Makefile
           touch patches/patches.bin
@@ -63,22 +63,22 @@ jobs:
           find . -name "CMakeLists.txt" -exec sed -i '' 's/10.15/17.0/g' {} +
           echo "" > lib/rt64/src/contrib/nativefiledialog-extended/src/CMakeLists.txt
 
-          # 4. PARCHE ANTIMEMORIA (Para el error 137 de spirv)
-          # Esto busca donde se llama a spirv_cross_msl y lo reemplaza por "touch"
-          # "touch" simplemente crea un archivo vacío con el nombre correcto sin gastar RAM
+          # 4. PARCHE ANTIMEMORIA
           find . -name "CMakeLists.txt" -exec sed -i '' 's/COMMAND spirv_cross_msl/COMMAND touch/g' {} +
 
           mkdir build
           cd build
           FREETYPE_PATH=$(brew --prefix freetype)
 
+          # 5. DESACTIVAR LIVERECOMP Y JIT
+          # Hemos añadido -DENABLE_LIVE_RECOMP=OFF y otros comandos para apagar el JIT
           cmake .. -G Ninja \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=17.0 \
             -DCMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET=17.0 \
-            -DCMAKE_CXX_FLAGS="-miphoneos-version-min=17.0" \
+            -DCMAKE_CXX_FLAGS="-miphoneos-version-min=17.0 -DSLJIT_CONFIG_UNSUPPORTED=1" \
             -DSDL2_DIR=$GITHUB_WORKSPACE/sdl2_ios/lib/cmake/SDL2 \
             -DFREETYPE_INCLUDE_DIRS=$FREETYPE_PATH/include/freetype2 \
             -DFREETYPE_LIBRARY=$FREETYPE_PATH/lib/libfreetype.a \
@@ -90,7 +90,9 @@ jobs:
             -DNFD_GTK=OFF \
             -DNFD_MACOS=OFF \
             -DENABLE_NFD=OFF \
-            -DAPPKIT_LIBRARY=""
+            -DAPPKIT_LIBRARY="" \
+            -DENABLE_LIVE_RECOMP=OFF \
+            -DENABLE_JIT=OFF
             
       - name: Compilar
         run: |
